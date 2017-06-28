@@ -1,5 +1,11 @@
 #include "includes.h"
 #include "classes.h"
+
+#define SCRN_W 20
+#define SCRN_H 20
+
+HRESULT inputHandle();
+
 int CALLBACK WinMain(
 	HINSTANCE hInstance,
 	HINSTANCE ,
@@ -7,18 +13,18 @@ int CALLBACK WinMain(
 	int       )
 {
 	// Variables
-	DXIFACE directX;
+	DXISPACE::DXIFACE directX(SCRN_W, SCRN_H);
 
 	// Initialize modules
-	directX.Initialize();
+	directX.Initialize(hInstance, inputHandle, L"First Window");
 
-	// Program Loop
+	// Run UI Loop
 
-	MSG msg;
+	directX.RunMessageLoop();
+}
 
-	while (GetMessage(&msg, NULL, 0, 0))
-	{
-		TranslateMessage(&msg);
-		DispatchMessage(&msg);
-	}
+HRESULT inputHandle()
+{
+	HRESULT hr = S_OK;
+	return hr;
 }
