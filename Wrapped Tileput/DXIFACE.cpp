@@ -1,14 +1,14 @@
 #include "DXIFACE.h"
 using namespace DXISPACE;
 
-DXIFACE::DXIFACE(int tiles_wide, int tiles_high) :
+DXIFACE::DXIFACE(int* screensizeWH, int* tilesizeWH) :
 	m_hWnd(NULL),
 	m_pDirect2dFactory(NULL),
 	m_pRenderTarget(NULL)
 {
-	cellBuffer = new cell[tiles_wide, tiles_high];
-	tiles_w = tiles_wide;
-	tiles_h = tiles_high;
+	cellBuffer = new cell[screensizeWH[0], screensizeWH[1]];
+	screensize[0] = screensizeWH[0];
+	screensize[1] = screensizeWH[1];
 }
 
 
@@ -22,7 +22,6 @@ DXIFACE::~DXIFACE()
 HRESULT DXIFACE::Initialize(HINSTANCE hInstance, HRESULT inputFunc(HWND,UINT,WPARAM,LPARAM), wchar_t* windowName)
 {
 	HRESULT hr = S_OK;
-	HRESULT hr;
 
 	unhandleFunc = inputFunc;
 
@@ -48,11 +47,11 @@ HRESULT DXIFACE::Initialize(HINSTANCE hInstance, HRESULT inputFunc(HWND,UINT,WPA
 
 		// Because the CreateWindow function takes its size in pixels,
 		// obtain the system DPI and use it to scale the window size.
-		FLOAT dpiX, dpiY;
+//		FLOAT dpiX, dpiY;
 
 		// The factory returns the current system DPI. This is also 
 		// the value it will use to create its own windows.
-		m_pDirect2dFactory->GetDesktopDpi(&dpiX, &dpiY);
+//		m_pDirect2dFactory->GetDesktopDpi(&dpiX, &dpiY);
 
 		// Create the window.
 		m_hWnd = CreateWindow(
@@ -61,8 +60,9 @@ HRESULT DXIFACE::Initialize(HINSTANCE hInstance, HRESULT inputFunc(HWND,UINT,WPA
 			WS_OVERLAPPEDWINDOW,
 			CW_USEDEFAULT,
 			CW_USEDEFAULT,
-			static_cast<UINT>(ceil(640.f * dpiX / 96.f)),
-			static_cast<UINT>(ceil(480.f * dpiY / 96.f)),
+//			static_cast<UINT>(ceil(640.f * dpiX / 96.f)),
+//			static_cast<UINT>(ceil(480.f * dpiY / 96.f)),
+			640, 480,
 			NULL,
 			NULL,
 			hInstance,
@@ -90,6 +90,11 @@ void DXISPACE::DXIFACE::RunMessageLoop()
 	}
 }
 
+HRESULT DXISPACE::DXIFACE::CreateDeviceIndResources()
+{
+	return S_OK;
+}
+
 LRESULT CALLBACK DXISPACE::DXIFACE::WndProc(
 	HWND hWnd,
 	UINT message,
@@ -97,29 +102,36 @@ LRESULT CALLBACK DXISPACE::DXIFACE::WndProc(
 	LPARAM lParam
 )
 {
-		LRESULT result = 0;
+	LRESULT result = 0;
+	
 
-		if (message == WM_CREATE)
-		{
-			LPCREATESTRUCT pcs = (LPCREATESTRUCT)lParam;
-			DXIFACE* pThis = (DXIFACE*)pcs->lpCreateParams;
+	if (message == WM_CREATE)
+	{
+		LPCREATESTRUCT pcs = (LPCREATESTRUCT)lParam;
+		DXIFACE* pThis = (DXIFACE*)pcs->lpCreateParams;
 
-			::SetWindowLongPtrW(
+		::SetWindowLongPtrW(
+			hWnd,
+			GWLP_USERDATA,
+			PtrToUlong(pThis)
+		);
+
+		result = 1;
+	}
+	else
+	{
+		DXIFACE* pThis = reinterpret_cast<DXIFACE*>(static_cast<LONG_PTR>(
+			::GetWindowLongPtrW(
 				hWnd,
-				GWLP_USERDATA,
-				PtrToUlong(pThis)
-			);
+				GWLP_USERDATA
+			)));
+		bool wasHandled = false;
 
-			result = 1;
-		}
-		else
-		{
-			DXIFACE* pThis = reinterpret_cast<DXIFACE*>(static_cast<LONG_PTR>(
-				::GetWindowLongPtrW(
-					hWnd,
-					GWLP_USERDATA
-				)));
-			bool wasHandled = false;
 
-			if (!wasHandled) result = pThis->unhandleFunc(hWnd, message, wParam, lParam);
+
+//		if (!wasHandled) result = pThis->unhandleFunc(hWnd, message, wParam, lParam);
+		result = DefWindowProcW(hWnd, message, wParam, lParam);
+	}
+
+	return result;
 }

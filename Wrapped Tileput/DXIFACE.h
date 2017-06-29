@@ -16,12 +16,12 @@ namespace DXISPACE {
 	class DXIFACE
 	{
 	public:
-		DXIFACE(int tiles_wide, int tiles_high);
+		DXIFACE(int* screensizeWH, int* tilesizeWH);
 		~DXIFACE();
 
 		HRESULT Initialize(HINSTANCE hInstance, HRESULT inputFunc(HWND, UINT, WPARAM, LPARAM), wchar_t* windowName);
 		HRESULT Render();
-		HRESULT SetCells(__in cell*, int tiles_wide, int tiles_high);
+		HRESULT SetCells(__in cell*, int[2] );
 		void    GetCells(__out cell*);
 
 		void	RunMessageLoop();
@@ -29,6 +29,7 @@ namespace DXISPACE {
 		HRESULT CreateDeviceIndResources();
 		HRESULT CreateDeviceResources();
 		void    DiscardDeviceResources();
+		void	OnResize(UINT width, UINT height);
 
 		static LRESULT CALLBACK WndProc(
 			HWND hWnd,
@@ -42,7 +43,8 @@ namespace DXISPACE {
 		ID2D1Factory* m_pDirect2dFactory;
 		ID2D1RenderTarget* m_pRenderTarget;
 		cell* cellBuffer;
-		int tiles_h, tiles_w;
+		int screensize[2];
+		int tilesize[2];
 		std::mutex cellAccess;
 		LRESULT(*unhandleFunc)(HWND, UINT, WPARAM, LPARAM);
 	};
