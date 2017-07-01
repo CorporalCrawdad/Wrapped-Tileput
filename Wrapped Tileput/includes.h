@@ -19,3 +19,8 @@ inline void SafeRelease(Interface **ppInterfaceToRelease)
 		(*ppInterfaceToRelease) = NULL;
 	}
 }
+
+#ifndef HINST_THISCOMPONENT
+EXTERN_C IMAGE_DOS_HEADER __ImageBase;
+#define HINST_THISCOMPONENT ((HINSTANCE)&__ImageBase)
+#endif

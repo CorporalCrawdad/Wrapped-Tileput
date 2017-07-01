@@ -19,7 +19,7 @@ DXIFACE::~DXIFACE()
 	delete [] cellBuffer;
 }
 
-HRESULT DXIFACE::Initialize(HINSTANCE hInstance, HRESULT inputFunc(HWND,UINT,WPARAM,LPARAM), wchar_t* windowName)
+HRESULT DXIFACE::Initialize(HINSTANCE hInstance, LRESULT inputFunc(HWND,UINT,WPARAM,LPARAM), wchar_t* windowName)
 {
 	HRESULT hr = S_OK;
 
@@ -83,7 +83,7 @@ void DXISPACE::DXIFACE::RunMessageLoop()
 {
 	MSG msg;
 
-	while (GetMessage(&msg, m_hWnd, NULL, NULL))
+	while (GetMessage(&msg, NULL, NULL, NULL)>0)
 	{
 		TranslateMessage(&msg);
 		DispatchMessage(&msg);
@@ -95,26 +95,23 @@ HRESULT DXISPACE::DXIFACE::CreateDeviceIndResources()
 	return S_OK;
 }
 
-LRESULT CALLBACK DXISPACE::DXIFACE::WndProc(
-	HWND hWnd,
-	UINT message,
-	WPARAM wParam,
-	LPARAM lParam
-)
+LRESULT CALLBACK DXISPACE::DXIFACE::WndProc(HWND hWnd,UINT message,WPARAM wParam,LPARAM lParam)
 {
 	LRESULT result = 0;
-	
+
+
 
 	if (message == WM_CREATE)
 	{
 		LPCREATESTRUCT pcs = (LPCREATESTRUCT)lParam;
 		DXIFACE* pThis = (DXIFACE*)pcs->lpCreateParams;
 
-		::SetWindowLongPtrW(
-			hWnd,
-			GWLP_USERDATA,
-			PtrToUlong(pThis)
-		);
+		if (FAILED(::SetWindowLongPtrW(hWnd, GWLP_USERDATA, PtrToUlong(pThis))))
+		{
+			wchar_t buf[40];
+			swprintf_s(buf, L"Error code: %d", int(GetLastError()));
+			MessageBox(hWnd, buf, L"Error", MB_OK);
+		}
 
 		result = 1;
 	}
@@ -127,10 +124,27 @@ LRESULT CALLBACK DXISPACE::DXIFACE::WndProc(
 			)));
 		bool wasHandled = false;
 
+		if (pThis!=0)
+		{
+			switch (message)
+			{
+			case WM_DESTROY:
+				PostQuitMessage(0);
+				result = 1;
+				wasHandled = true;
+				break;
 
+			}
 
-//		if (!wasHandled) result = pThis->unhandleFunc(hWnd, message, wParam, lParam);
-		result = DefWindowProcW(hWnd, message, wParam, lParam);
+			if (!wasHandled)
+				result = pThis->unhandleFunc(hWnd, message, wParam, lParam);
+			return result;
+		}
+
+		if (!wasHandled)
+		{
+			result = DefWindowProc(hWnd, message, wParam, lParam);
+		}
 	}
 
 	return result;

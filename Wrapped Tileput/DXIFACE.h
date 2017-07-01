@@ -19,7 +19,7 @@ namespace DXISPACE {
 		DXIFACE(int* screensizeWH, int* tilesizeWH);
 		~DXIFACE();
 
-		HRESULT Initialize(HINSTANCE hInstance, HRESULT inputFunc(HWND, UINT, WPARAM, LPARAM), wchar_t* windowName);
+		HRESULT Initialize(HINSTANCE hInstance, LRESULT inputFunc(HWND, UINT, WPARAM, LPARAM), wchar_t* windowName);
 		HRESULT Render();
 		HRESULT SetCells(__in cell*, int[2] );
 		void    GetCells(__out cell*);
