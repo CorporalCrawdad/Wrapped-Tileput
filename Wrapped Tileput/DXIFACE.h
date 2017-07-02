@@ -47,5 +47,10 @@ namespace DXISPACE {
 		int tilesize[2];
 		std::mutex cellAccess;
 		LRESULT(*unhandleFunc)(HWND, UINT, WPARAM, LPARAM);
+
+		// to be replaced vars
+		ID2D1Bitmap* tile;
+		// load bitmap from file WIC: https://msdn.microsoft.com/en-us/library/windows/desktop/dd756686(v=vs.85).aspx
+		// draw text using DWrite: https://msdn.microsoft.com/en-us/library/windows/desktop/dd756692(v=vs.85).aspx
 	};
 }
