@@ -92,7 +92,16 @@ void DXISPACE::DXIFACE::RunMessageLoop()
 
 HRESULT DXISPACE::DXIFACE::CreateDeviceIndResources()
 {
-	return S_OK;
+	HRESULT hr = S_OK;
+
+	hr = D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, &m_pDirect2dFactory);
+
+	return hr;
+}
+
+void DXISPACE::DXIFACE::DiscardDeviceResources()
+{
+	SafeRelease(&m_pDirect2dFactory);
 }
 
 LRESULT CALLBACK DXISPACE::DXIFACE::WndProc(HWND hWnd,UINT message,WPARAM wParam,LPARAM lParam)
@@ -148,4 +157,15 @@ LRESULT CALLBACK DXISPACE::DXIFACE::WndProc(HWND hWnd,UINT message,WPARAM wParam
 	}
 
 	return result;
+}
+
+void DXISPACE::DXIFACE::OnResize(UINT width, UINT height)
+{
+	if (m_pRenderTarget)
+	{
+		// Note: This method can fail, but it's okay to ignore the
+		// error here, because the error will be returned again
+		// the next time EndDraw is called.
+		m_pRenderTarget->Resize(D2D1::SizeU(width, height));
+	}
 }

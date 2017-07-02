@@ -1,17 +1,19 @@
 #pragma once
 #include "includes.h"
 namespace DXISPACE {
-	enum TILEVAL {};
 	enum INTMODE {};
 	enum COLOR {};
 	
-	struct cell
+	template <typename TileType> struct cell
 	{
 		bool changed = false;
-		TILEVAL value;
+		TileType*		tileval;
 		INTMODE interp;
 		COLOR   color;
 	};
+
+	template struct cell<ID2D1Bitmap>;
+	template struct cell<wchar_t>;
 
 	class DXIFACE
 	{
@@ -21,8 +23,10 @@ namespace DXISPACE {
 
 		HRESULT Initialize(HINSTANCE hInstance, LRESULT inputFunc(HWND, UINT, WPARAM, LPARAM), wchar_t* windowName);
 		HRESULT Render();
-		HRESULT SetCells(__in cell*, int[2] );
-		void    GetCells(__out cell*);
+		template <typename TileType>
+		HRESULT SetCells(int[2] loc_wh, __in TileType* value);
+		template <typename TileType>
+		void    GetCells(int[2] loc_wh, __out TileType* retVal);
 
 		void	RunMessageLoop();
 	private:
@@ -41,7 +45,7 @@ namespace DXISPACE {
 	private:
 		HWND m_hWnd;
 		ID2D1Factory* m_pDirect2dFactory;
-		ID2D1RenderTarget* m_pRenderTarget;
+		ID2D1HwndRenderTarget* m_pRenderTarget;
 		cell* cellBuffer;
 		int screensize[2];
 		int tilesize[2];
