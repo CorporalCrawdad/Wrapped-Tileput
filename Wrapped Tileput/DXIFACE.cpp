@@ -106,7 +106,7 @@ LRESULT CALLBACK DXISPACE::DXIFACE::WndProc(HWND hWnd,UINT message,WPARAM wParam
 		LPCREATESTRUCT pcs = (LPCREATESTRUCT)lParam;
 		DXIFACE* pThis = (DXIFACE*)pcs->lpCreateParams;
 
-		if (FAILED(::SetWindowLongPtrW(hWnd, GWLP_USERDATA, PtrToUlong(pThis))))
+		if (FAILED(::SetWindowLongPtr(hWnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(pThis))))
 		{
 			wchar_t buf[40];
 			swprintf_s(buf, L"Error code: %d", int(GetLastError()));
@@ -118,13 +118,13 @@ LRESULT CALLBACK DXISPACE::DXIFACE::WndProc(HWND hWnd,UINT message,WPARAM wParam
 	else
 	{
 		DXIFACE* pThis = reinterpret_cast<DXIFACE*>(static_cast<LONG_PTR>(
-			::GetWindowLongPtrW(
+			::GetWindowLongPtr(
 				hWnd,
 				GWLP_USERDATA
 			)));
 		bool wasHandled = false;
 
-		if (pThis!=0)
+		if (pThis != 0)
 		{
 			switch (message)
 			{

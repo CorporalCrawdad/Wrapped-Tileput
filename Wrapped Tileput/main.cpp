@@ -1,8 +1,9 @@
 #include "includes.h"
 #include "classes.h"
 
-#define SCRN_W 20
-#define SCRN_H 20
+#define SCRN_SZ 1,1
+#define TILE_H 32
+#define TILE_W 32
 
 LRESULT inputHandle(HWND, UINT, WPARAM, LPARAM);
 
@@ -17,8 +18,8 @@ int CALLBACK WinMain(
 	HRESULT hr;
 
 	{
-		int screensize[2] = { SCRN_W,SCRN_H };
-		int tilesize[2] = { 32,32 };
+		int screensize[2] = { SCRN_SZ };
+		int tilesize[2] = { TILE_W, TILE_H };
 		directX = new DXISPACE::DXIFACE(screensize, tilesize);
 	}
 
