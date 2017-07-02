@@ -99,6 +99,30 @@ HRESULT DXISPACE::DXIFACE::CreateDeviceIndResources()
 	return hr;
 }
 
+HRESULT DXISPACE::DXIFACE::CreateDeviceResources()
+{
+	HRESULT hr = S_OK;
+
+	if (!m_pRenderTarget)
+	{
+		RECT rc;
+
+		GetClientRect(m_hWnd, &rc);
+
+		D2D1_SIZE_U size = D2D1::SizeU(
+			rc.right - rc.left,
+			rc.bottom - rc.top);
+
+		// Create the D2D render target
+		hr = m_pDirect2dFactory->CreateHwndRenderTarget(
+			D2D1::RenderTargetProperties(),
+			D2D1::HwndRenderTargetProperties(m_hWnd, size),
+			&m_pRenderTarget);
+	}
+
+	return hr;
+}
+
 void DXISPACE::DXIFACE::DiscardDeviceResources()
 {
 	SafeRelease(&m_pDirect2dFactory);
@@ -138,11 +162,40 @@ LRESULT CALLBACK DXISPACE::DXIFACE::WndProc(HWND hWnd,UINT message,WPARAM wParam
 			switch (message)
 			{
 			case WM_DESTROY:
+			{
 				PostQuitMessage(0);
 				result = 1;
 				wasHandled = true;
 				break;
+			}
+			
+			case WM_SIZE:
+				{
+					UINT width = LOWORD(lParam);
+					UINT height = HIWORD(lParam);
+					pThis->OnResize(width, height);
+				}
+				result = 0;
+				wasHandled = true;
+				break;
+			
 
+			case WM_DISPLAYCHANGE:
+				{
+					InvalidateRect(hWnd, NULL, FALSE);
+				}
+				result = 0;
+				wasHandled = true;
+				break;
+
+			case WM_PAINT:
+				{
+					pThis->Render();
+					ValidateRect(hWnd, NULL);
+				}
+				result = 0;
+				wasHandled = true;
+				break;
 			}
 
 			if (!wasHandled)
@@ -168,4 +221,28 @@ void DXISPACE::DXIFACE::OnResize(UINT width, UINT height)
 		// the next time EndDraw is called.
 		m_pRenderTarget->Resize(D2D1::SizeU(width, height));
 	}
+}
+
+HRESULT DXISPACE::DXIFACE::Render()
+{
+	HRESULT hr = S_OK;
+
+	hr = CreateDeviceResources();
+
+	if (SUCCEEDED(hr))
+	{
+		m_pRenderTarget->BeginDraw();
+		m_pRenderTarget->SetTransform(D2D1::Matrix3x2F::Identity());
+		m_pRenderTarget->Clear(D2D1::ColorF(D2D1::ColorF::Aquamarine));
+	}
+
+	hr = m_pRenderTarget->EndDraw();
+
+	if (hr == D2DERR_RECREATE_TARGET)
+	{
+		hr = S_OK;
+		DiscardDeviceResources();
+	}
+
+	return hr;
 }

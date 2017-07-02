@@ -3,17 +3,15 @@
 namespace DXISPACE {
 	enum INTMODE {};
 	enum COLOR {};
+	enum TileType {};
 	
-	template <typename TileType> struct cell
+	struct cell
 	{
 		bool changed = false;
 		TileType*		tileval;
 		INTMODE interp;
 		COLOR   color;
 	};
-
-	template struct cell<ID2D1Bitmap>;
-	template struct cell<wchar_t>;
 
 	class DXIFACE
 	{
@@ -23,10 +21,8 @@ namespace DXISPACE {
 
 		HRESULT Initialize(HINSTANCE hInstance, LRESULT inputFunc(HWND, UINT, WPARAM, LPARAM), wchar_t* windowName);
 		HRESULT Render();
-		template <typename TileType>
-		HRESULT SetCells(int[2] loc_wh, __in TileType* value);
-		template <typename TileType>
-		void    GetCells(int[2] loc_wh, __out TileType* retVal);
+		HRESULT SetCells(int loc_w, int loc_h, __in TileType* value);
+		void    GetCells(int loc_w, int loc_h, __out TileType* retVal);
 
 		void	RunMessageLoop();
 	private:
