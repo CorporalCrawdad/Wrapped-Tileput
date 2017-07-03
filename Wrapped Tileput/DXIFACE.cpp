@@ -118,6 +118,9 @@ HRESULT DXISPACE::DXIFACE::CreateDeviceResources()
 			D2D1::RenderTargetProperties(),
 			D2D1::HwndRenderTargetProperties(m_hWnd, size),
 			&m_pRenderTarget);
+
+		if(SUCCEEDED(hr))
+			hr = fillBitmap();
 	}
 
 	return hr;
@@ -234,9 +237,7 @@ HRESULT DXISPACE::DXIFACE::Render()
 	{
 		m_pRenderTarget->BeginDraw();
 		m_pRenderTarget->SetTransform(D2D1::Matrix3x2F::Identity());
-		m_pRenderTarget->Clear(D2D1::ColorF(D2D1::ColorF::Aquamarine));
-
-		fillBitmap();
+		m_pRenderTarget->Clear(D2D1::ColorF(D2D1::ColorF::Aquamarine));		
 
 		// Retrieve the size of the bitmap and size of the rendertarget
 		D2D1_SIZE_F renderTargetSize = m_pRenderTarget->GetSize();
@@ -245,13 +246,21 @@ HRESULT DXISPACE::DXIFACE::Render()
 		D2D1_POINT_2F upperLeftCorner = D2D1::Point2F(100.f, 10.f);
 
 		// Draw a bitmap.
-		m_pRenderTarget->DrawBitmap(
+		/*m_pRenderTarget->DrawBitmap(
 			tile,
 			D2D1::RectF(
 			((renderTargetSize.width / 2) - (size.width / 2)),
 				((renderTargetSize.height / 2) - (size.height / 2)),
 				((renderTargetSize.width / 2) + (size.width / 2)),
 				((renderTargetSize.height / 2) + (size.height / 2))
+			));*/
+		m_pRenderTarget->DrawBitmap(
+			tile,
+			D2D1::RectF(
+			(renderTargetSize.width / 2) - 32,
+				(renderTargetSize.height / 2) - 32,
+				(renderTargetSize.width / 2) + 32,
+				(renderTargetSize.height / 2) + 32
 			));
 	}
 
