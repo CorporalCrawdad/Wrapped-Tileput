@@ -1,9 +1,10 @@
 #include "includes.h"
 #include "classes.h"
 
-#define SCRN_SZ 1,1
-#define TILE_H 32
-#define TILE_W 32
+#define SCRN_SZ_W 1
+#define SCRN_SZ_H 1
+#define TILE_SZ_W 32
+#define TILE_SZ_H 32
 
 LRESULT inputHandle(HWND, UINT, WPARAM, LPARAM);
 
@@ -18,9 +19,15 @@ int CALLBACK WinMain(
 	HRESULT hr;
 
 	{
-		int screensize[2] = { SCRN_SZ };
-		int tilesize[2] = { TILE_W, TILE_H };
-		directX = new DXISPACE::DXIFACE(screensize, tilesize);
+		DXISPACE::dxifaceInfo info;
+		ZeroMemory(&info, sizeof(info));
+		info.screensize.width = SCRN_SZ_W;
+		info.screensize.height = SCRN_SZ_H;
+		info.tilesize.width = TILE_SZ_W;
+		info.tilesize.height = TILE_SZ_H;
+		info.tilesetFilename = L"HELO.bmp";
+
+		directX = new DXISPACE::DXIFACE(&info);
 	}
 
 	// Initialize modules

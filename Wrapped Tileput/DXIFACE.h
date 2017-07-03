@@ -14,10 +14,20 @@ namespace DXISPACE {
 		COLOR   color;
 	};
 
+	struct dxifaceInfo
+	{
+		struct
+		{
+			int height;
+			int width;
+		} screensize, tilesize;
+		PCWSTR tilesetFilename;
+	};
+
 	class DXIFACE
 	{
 	public:
-		DXIFACE(int* screensizeWH, int* tilesizeWH);
+		DXIFACE(dxifaceInfo* info);
 		~DXIFACE();
 
 		HRESULT Initialize(HINSTANCE hInstance, LRESULT inputFunc(HWND, UINT, WPARAM, LPARAM), wchar_t* windowName);
@@ -31,7 +41,7 @@ namespace DXISPACE {
 		HRESULT CreateDeviceResources();
 		void    DiscardDeviceResources();
 		void	OnResize(UINT width, UINT height);
-		HRESULT fillBitmap();
+		HRESULT fillTileset();
 
 		static LRESULT CALLBACK WndProc(
 			HWND hWnd,
@@ -43,6 +53,7 @@ namespace DXISPACE {
 		 
 	private:
 		HWND m_hWnd;
+		PCWSTR tsFileName;
 		ID2D1Factory* m_pDirect2dFactory;
 		ID2D1HwndRenderTarget* m_pRenderTarget;
 		cell* cellBuffer;
@@ -50,9 +61,8 @@ namespace DXISPACE {
 		int tilesize[2];
 		std::mutex cellAccess;
 		LRESULT(*unhandleFunc)(HWND, UINT, WPARAM, LPARAM);
+		ID2D1Bitmap* p_mBTileSet;
 
-		// to be replaced vars
-		ID2D1Bitmap* tile;
 		// load bitmap from file WIC: https://msdn.microsoft.com/en-us/library/windows/desktop/dd756686(v=vs.85).aspx
 		// draw text using DWrite: https://msdn.microsoft.com/en-us/library/windows/desktop/dd756692(v=vs.85).aspx
 	};

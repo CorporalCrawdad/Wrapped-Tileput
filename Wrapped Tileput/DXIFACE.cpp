@@ -1,14 +1,15 @@
 #include "DXIFACE.h"
 using namespace DXISPACE;
 
-DXIFACE::DXIFACE(int* screensizeWH, int* tilesizeWH) :
+DXIFACE::DXIFACE(dxifaceInfo* info) :
 	m_hWnd(NULL),
 	m_pDirect2dFactory(NULL),
 	m_pRenderTarget(NULL)
 {
-	cellBuffer = new cell[screensizeWH[0], screensizeWH[1]];
-	screensize[0] = screensizeWH[0];
-	screensize[1] = screensizeWH[1];
+	cellBuffer = new cell[info->screensize.width, info->screensize.height];
+	screensize[0] = info->screensize.width;
+	screensize[1] = info->screensize.height;
+	tsFileName = info->tilesetFilename;
 }
 
 
@@ -120,7 +121,7 @@ HRESULT DXISPACE::DXIFACE::CreateDeviceResources()
 			&m_pRenderTarget);
 
 		if(SUCCEEDED(hr))
-			hr = fillBitmap();
+			hr = fillTileset();
 	}
 
 	return hr;
@@ -129,7 +130,7 @@ HRESULT DXISPACE::DXIFACE::CreateDeviceResources()
 void DXISPACE::DXIFACE::DiscardDeviceResources()
 {
 	SafeRelease(&m_pDirect2dFactory);
-	SafeRelease(&tile);
+	SafeRelease(&p_mBTileSet);
 }
 
 LRESULT CALLBACK DXISPACE::DXIFACE::WndProc(HWND hWnd,UINT message,WPARAM wParam,LPARAM lParam)
@@ -241,26 +242,18 @@ HRESULT DXISPACE::DXIFACE::Render()
 
 		// Retrieve the size of the bitmap and size of the rendertarget
 		D2D1_SIZE_F renderTargetSize = m_pRenderTarget->GetSize();
-		D2D1_SIZE_F size = tile->GetSize();
+		D2D1_SIZE_F size = p_mBTileSet->GetSize();
 
 		D2D1_POINT_2F upperLeftCorner = D2D1::Point2F(100.f, 10.f);
 
 		// Draw a bitmap.
-		/*m_pRenderTarget->DrawBitmap(
-			tile,
+		m_pRenderTarget->DrawBitmap(
+			p_mBTileSet,
 			D2D1::RectF(
 			((renderTargetSize.width / 2) - (size.width / 2)),
 				((renderTargetSize.height / 2) - (size.height / 2)),
 				((renderTargetSize.width / 2) + (size.width / 2)),
 				((renderTargetSize.height / 2) + (size.height / 2))
-			));*/
-		m_pRenderTarget->DrawBitmap(
-			tile,
-			D2D1::RectF(
-			(renderTargetSize.width / 2) - 32,
-				(renderTargetSize.height / 2) - 32,
-				(renderTargetSize.width / 2) + 32,
-				(renderTargetSize.height / 2) + 32
 			));
 	}
 
@@ -275,7 +268,7 @@ HRESULT DXISPACE::DXIFACE::Render()
 	return hr;
 }
 
-HRESULT DXISPACE::DXIFACE::fillBitmap()
+HRESULT DXISPACE::DXIFACE::fillTileset()
 {
 	IWICBitmapDecoder *pDecoder = NULL;
 	IWICBitmapFrameDecode *pSource = NULL;
@@ -293,7 +286,7 @@ HRESULT DXISPACE::DXIFACE::fillBitmap()
 	);
 
 	hr = pIWICFactory->CreateDecoderFromFilename(
-		L"HelloWorld.bmp",
+		tsFileName,
 		NULL,
 		GENERIC_READ,
 		WICDecodeMetadataCacheOnLoad,
@@ -334,7 +327,7 @@ HRESULT DXISPACE::DXIFACE::fillBitmap()
 		hr = m_pRenderTarget->CreateBitmapFromWicBitmap(
 			pConverter,
 			NULL,
-			&tile
+			&p_mBTileSet
 		);
 	}
 
