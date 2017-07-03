@@ -126,6 +126,7 @@ HRESULT DXISPACE::DXIFACE::CreateDeviceResources()
 void DXISPACE::DXIFACE::DiscardDeviceResources()
 {
 	SafeRelease(&m_pDirect2dFactory);
+	SafeRelease(&tile);
 }
 
 LRESULT CALLBACK DXISPACE::DXIFACE::WndProc(HWND hWnd,UINT message,WPARAM wParam,LPARAM lParam)
@@ -234,6 +235,24 @@ HRESULT DXISPACE::DXIFACE::Render()
 		m_pRenderTarget->BeginDraw();
 		m_pRenderTarget->SetTransform(D2D1::Matrix3x2F::Identity());
 		m_pRenderTarget->Clear(D2D1::ColorF(D2D1::ColorF::Aquamarine));
+
+		fillBitmap();
+
+		// Retrieve the size of the bitmap and size of the rendertarget
+		D2D1_SIZE_F renderTargetSize = m_pRenderTarget->GetSize();
+		D2D1_SIZE_F size = tile->GetSize();
+
+		D2D1_POINT_2F upperLeftCorner = D2D1::Point2F(100.f, 10.f);
+
+		// Draw a bitmap.
+		m_pRenderTarget->DrawBitmap(
+			tile,
+			D2D1::RectF(
+			((renderTargetSize.width / 2) - (size.width / 2)),
+				((renderTargetSize.height / 2) - (size.height / 2)),
+				((renderTargetSize.width / 2) + (size.width / 2)),
+				((renderTargetSize.height / 2) + (size.height / 2))
+			));
 	}
 
 	hr = m_pRenderTarget->EndDraw();
@@ -243,6 +262,79 @@ HRESULT DXISPACE::DXIFACE::Render()
 		hr = S_OK;
 		DiscardDeviceResources();
 	}
+
+	return hr;
+}
+
+HRESULT DXISPACE::DXIFACE::fillBitmap()
+{
+	IWICBitmapDecoder *pDecoder = NULL;
+	IWICBitmapFrameDecode *pSource = NULL;
+	IWICStream *pStream = NULL;
+	IWICFormatConverter *pConverter = NULL;
+	IWICBitmapScaler *pScaler = NULL;
+	IWICImagingFactory *pIWICFactory = NULL;
+
+
+	HRESULT hr = CoCreateInstance(CLSID_WICImagingFactory,
+		NULL,
+		CLSCTX_INPROC_SERVER,
+		IID_IWICImagingFactory,
+		(LPVOID*)&pIWICFactory
+	);
+
+	hr = pIWICFactory->CreateDecoderFromFilename(
+		L"HelloWorld.bmp",
+		NULL,
+		GENERIC_READ,
+		WICDecodeMetadataCacheOnLoad,
+		&pDecoder
+	);
+
+	if (SUCCEEDED(hr))
+	{
+		// Create the initial frame.
+		hr = pDecoder->GetFrame(0, &pSource);
+	}
+
+	if (SUCCEEDED(hr))
+	{
+
+		// Convert the image format to 32bppPBGRA
+		// (DXGI_FORMAT_B8G8R8A8_UNORM + D2D1_ALPHA_MODE_PREMULTIPLIED).
+		hr = pIWICFactory->CreateFormatConverter(&pConverter);
+
+	}
+
+	if (SUCCEEDED(hr))
+	{
+		hr = pConverter->Initialize(
+			pSource,
+			GUID_WICPixelFormat32bppPBGRA,
+			WICBitmapDitherTypeNone,
+			NULL,
+			0.f,
+			WICBitmapPaletteTypeMedianCut
+		);
+	}
+
+	if (SUCCEEDED(hr))
+	{
+
+		// Create a Direct2D bitmap from the WIC bitmap.
+		hr = m_pRenderTarget->CreateBitmapFromWicBitmap(
+			pConverter,
+			NULL,
+			&tile
+		);
+	}
+
+	SafeRelease(&pDecoder);
+	SafeRelease(&pSource);
+	SafeRelease(&pStream);
+	SafeRelease(&pConverter);
+	SafeRelease(&pScaler);
+	SafeRelease(&pIWICFactory);
 
 	return hr;
 }

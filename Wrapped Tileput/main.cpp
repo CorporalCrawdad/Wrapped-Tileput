@@ -24,6 +24,7 @@ int CALLBACK WinMain(
 	}
 
 	// Initialize modules
+	CoInitialize(NULL);
 	hr = directX->Initialize(hInstance, inputHandle, L"First Window");
 
 	// Run UI Loop
@@ -31,6 +32,7 @@ int CALLBACK WinMain(
 	if(SUCCEEDED(hr)) directX->RunMessageLoop();
 
 	delete directX;
+	CoUninitialize();
 }
 
 LRESULT inputHandle(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)

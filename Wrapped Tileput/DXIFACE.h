@@ -1,5 +1,6 @@
 #pragma once
 #include "includes.h"
+
 namespace DXISPACE {
 	enum INTMODE {};
 	enum COLOR {};
@@ -30,6 +31,7 @@ namespace DXISPACE {
 		HRESULT CreateDeviceResources();
 		void    DiscardDeviceResources();
 		void	OnResize(UINT width, UINT height);
+		HRESULT fillBitmap();
 
 		static LRESULT CALLBACK WndProc(
 			HWND hWnd,
@@ -38,6 +40,7 @@ namespace DXISPACE {
 			LPARAM lParam
 		);
 
+		 
 	private:
 		HWND m_hWnd;
 		ID2D1Factory* m_pDirect2dFactory;

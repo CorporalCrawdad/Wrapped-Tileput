@@ -7,7 +7,9 @@
 #include <wincodec.h>
 #include <mutex>
 
+
 #pragma comment(lib, "d2d1.lib")
+#pragma comment(lib, "Windowscodecs.lib")
 
 template<class Interface>
 inline void SafeRelease(Interface **ppInterfaceToRelease)
