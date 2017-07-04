@@ -8,10 +8,9 @@ DXIFACE::DXIFACE(dxifaceInfo* info) :
 {
 	screensize[0] = info->screensize.width;
 	screensize[1] = info->screensize.height;
-	cells = new cell[info->screensize.width*info->screensize.height];
-
-	cells[(0*1)+1].render = true;[]
-	cells[(0*1)+1].TileLocation.y = 16.0f;
+	cells = new cell*[info->screensize.width];
+	for (int i = 0; i < screensize[0]; i++)
+		cells[i] = new cell[info->screensize.height];
 
 	tilesize[0] = info->tilesize.width;
 	tilesize[1] = info->tilesize.height;
@@ -23,7 +22,9 @@ DXIFACE::~DXIFACE()
 {
 	SafeRelease(&m_pDirect2dFactory);
 	SafeRelease(&m_pRenderTarget);
-	delete [] cells;
+	for (int i=0; i<screensize[1]; i++)
+		delete [] cells[i];
+	delete[] cells;
 }
 
 HRESULT DXIFACE::Initialize(HINSTANCE hInstance, LRESULT inputFunc(HWND,UINT,WPARAM,LPARAM), wchar_t* windowName)
@@ -273,15 +274,15 @@ HRESULT DXISPACE::DXIFACE::Render()
 
 
 		// iterate through cells and draw each
-		/*for (int iw = 0; iw < screensize[0]; iw++)
+		for (int iw = 0; iw < screensize[0]; iw++)
 		{
 			for (int ih = 0; ih < screensize[1]; ih++)
 			{
-				if (cells[iw, ih].render)
+				if (cells[iw][ih].render)
 				{
 					// location of tile on tileset bitmap
-					D2D1_RECT_F srcLoc = D2D1::RectF(cells[ih, iw].TileLocation.y, cells[ih, iw].TileLocation.x, cells[ih, iw].TileLocation.y + tilesize[0], cells[ih, iw].TileLocation.x + tilesize[1]);
-					// translation of cell[w,h] to rect on screen
+					D2D1_RECT_F srcLoc = D2D1::RectF(cells[iw][ih].TileLocation.y, cells[iw][ih].TileLocation.x, cells[iw][ih].TileLocation.y + tilesize[0], cells[iw][ih].TileLocation.x + tilesize[1]);
+					// translation of cell[w][h] to rect on screen
 //					D2D1_RECT_F dest = D2D1::RectF(iw*actWidth, ih*actHeight, (iw+1)*actWidth, (ih+1)*actHeight);
 					D2D1_RECT_F dest = D2D1::RectF(iw*actDim, ih*actDim, (iw + 1)*actDim, (ih + 1)*actDim);
 					// draw the bitmap from its src in tilest to dest on screen
@@ -294,7 +295,7 @@ HRESULT DXISPACE::DXIFACE::Render()
 					);
 				}
 			}
-		}*/
+		}
 	}
 
 	hr = m_pRenderTarget->EndDraw();
@@ -310,9 +311,9 @@ HRESULT DXISPACE::DXIFACE::Render()
 
 HRESULT DXISPACE::DXIFACE::SetCell(int loc_w, int loc_h, float tileLocX, float tileLocY, bool vis)
 {
-	cells[loc_w, loc_h].TileLocation.x = tileLocX;
-	cells[loc_w, loc_h].TileLocation.y = tileLocY;
-	cells[loc_w, loc_h].render = vis;
+	cells[loc_w][loc_h].TileLocation.x = tileLocX;
+	cells[loc_w][loc_h].TileLocation.y = tileLocY;
+	cells[loc_w][loc_h].render = vis;
 	
 	return S_OK;
 }

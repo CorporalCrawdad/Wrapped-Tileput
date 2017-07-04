@@ -36,11 +36,6 @@ int CALLBACK WinMain(
 	hr = directX->Initialize(hInstance, inputHandle, L"First Window");
 
 	// Create thread to push cell information
-	//directX->SetCell(0, 1, 0.0f, 16.0f);
-	//directX->SetCell(1, 1, 0.0f, 32.0f);
-	//directX->SetCell(2, 1, 0.0f, 48.0f);
-	//directX->SetCell(3, 1, 0.0f, 48.0f);
-	//directX->SetCell(4, 1, 0.0f, 64.0f);
 
 	// Run UI Loop
 

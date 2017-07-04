@@ -62,7 +62,7 @@ namespace DXISPACE {
 		D2D1_COLOR_F m_bkgrdColor;
 		ID2D1Factory* m_pDirect2dFactory;
 		ID2D1HwndRenderTarget* m_pRenderTarget;
-		cell* cells;
+		cell** cells;
 		int screensize[2];
 		int tilesize[2];
 		std::mutex cellAccess;
