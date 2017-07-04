@@ -6,9 +6,15 @@ DXIFACE::DXIFACE(dxifaceInfo* info) :
 	m_pDirect2dFactory(NULL),
 	m_pRenderTarget(NULL)
 {
-	cellBuffer = new cell[info->screensize.width, info->screensize.height];
 	screensize[0] = info->screensize.width;
 	screensize[1] = info->screensize.height;
+	cells = new cell[info->screensize.width*info->screensize.height];
+
+	cells[(0*1)+1].render = true;[]
+	cells[(0*1)+1].TileLocation.y = 16.0f;
+
+	tilesize[0] = info->tilesize.width;
+	tilesize[1] = info->tilesize.height;
 	tsFileName = info->tilesetFilename;
 }
 
@@ -17,7 +23,7 @@ DXIFACE::~DXIFACE()
 {
 	SafeRelease(&m_pDirect2dFactory);
 	SafeRelease(&m_pRenderTarget);
-	delete [] cellBuffer;
+	delete [] cells;
 }
 
 HRESULT DXIFACE::Initialize(HINSTANCE hInstance, LRESULT inputFunc(HWND,UINT,WPARAM,LPARAM), wchar_t* windowName)
@@ -83,11 +89,20 @@ HRESULT DXIFACE::Initialize(HINSTANCE hInstance, LRESULT inputFunc(HWND,UINT,WPA
 void DXISPACE::DXIFACE::RunMessageLoop()
 {
 	MSG msg;
+	bool done = false;
 
-	while (GetMessage(&msg, NULL, NULL, NULL)>0)
+	while (!done)
 	{
-		TranslateMessage(&msg);
-		DispatchMessage(&msg);
+		if (PeekMessage(&msg, NULL, NULL, NULL, PM_REMOVE))
+		{
+			TranslateMessage(&msg);
+			DispatchMessage(&msg);
+		}
+
+		if (msg.message == WM_QUIT)
+			done = true;
+		else 
+			Render();
 	}
 }
 
@@ -130,7 +145,8 @@ HRESULT DXISPACE::DXIFACE::CreateDeviceResources()
 void DXISPACE::DXIFACE::DiscardDeviceResources()
 {
 	SafeRelease(&m_pDirect2dFactory);
-	SafeRelease(&p_mBTileSet);
+	SafeRelease(&m_pBTileSet);
+	//SafeRelease(&m_pBScreenBuffer);
 }
 
 LRESULT CALLBACK DXISPACE::DXIFACE::WndProc(HWND hWnd,UINT message,WPARAM wParam,LPARAM lParam)
@@ -195,8 +211,10 @@ LRESULT CALLBACK DXISPACE::DXIFACE::WndProc(HWND hWnd,UINT message,WPARAM wParam
 
 			case WM_PAINT:
 				{
-					pThis->Render();
+					HRESULT hr = pThis->Render();
 					ValidateRect(hWnd, NULL);
+					if (FAILED(hr))
+						PostQuitMessage(-1);
 				}
 				result = 0;
 				wasHandled = true;
@@ -238,23 +256,45 @@ HRESULT DXISPACE::DXIFACE::Render()
 	{
 		m_pRenderTarget->BeginDraw();
 		m_pRenderTarget->SetTransform(D2D1::Matrix3x2F::Identity());
-		m_pRenderTarget->Clear(D2D1::ColorF(D2D1::ColorF::Aquamarine));		
+		m_pRenderTarget->Clear(m_bkgrdColor);
 
-		// Retrieve the size of the bitmap and size of the rendertarget
+		// Retrieve the size of the render target
 		D2D1_SIZE_F renderTargetSize = m_pRenderTarget->GetSize();
-		D2D1_SIZE_F size = p_mBTileSet->GetSize();
 
-		D2D1_POINT_2F upperLeftCorner = D2D1::Point2F(100.f, 10.f);
+		// square tiles delimited by smallest side
+		float actDim = 0.0F;
+		if (renderTargetSize.width < renderTargetSize.height)
+			actDim = renderTargetSize.width / screensize[0];
+		else actDim = renderTargetSize.height / screensize[1];
 
-		// Draw a bitmap.
-		m_pRenderTarget->DrawBitmap(
-			p_mBTileSet,
-			D2D1::RectF(
-			((renderTargetSize.width / 2) - (size.width / 2)),
-				((renderTargetSize.height / 2) - (size.height / 2)),
-				((renderTargetSize.width / 2) + (size.width / 2)),
-				((renderTargetSize.height / 2) + (size.height / 2))
-			));
+		// tiles proportional to screensize
+//		float actWidth =  floorf(renderTargetSize.width / screensize[0]);
+//		float actHeight = floorf(renderTargetSize.height / screensize[1]);
+
+
+		// iterate through cells and draw each
+		/*for (int iw = 0; iw < screensize[0]; iw++)
+		{
+			for (int ih = 0; ih < screensize[1]; ih++)
+			{
+				if (cells[iw, ih].render)
+				{
+					// location of tile on tileset bitmap
+					D2D1_RECT_F srcLoc = D2D1::RectF(cells[ih, iw].TileLocation.y, cells[ih, iw].TileLocation.x, cells[ih, iw].TileLocation.y + tilesize[0], cells[ih, iw].TileLocation.x + tilesize[1]);
+					// translation of cell[w,h] to rect on screen
+//					D2D1_RECT_F dest = D2D1::RectF(iw*actWidth, ih*actHeight, (iw+1)*actWidth, (ih+1)*actHeight);
+					D2D1_RECT_F dest = D2D1::RectF(iw*actDim, ih*actDim, (iw + 1)*actDim, (ih + 1)*actDim);
+					// draw the bitmap from its src in tilest to dest on screen
+					m_pRenderTarget->DrawBitmap(
+						m_pBTileSet,
+						dest,
+						1.0f,
+						D2D1_BITMAP_INTERPOLATION_MODE_NEAREST_NEIGHBOR,
+						srcLoc
+					);
+				}
+			}
+		}*/
 	}
 
 	hr = m_pRenderTarget->EndDraw();
@@ -266,6 +306,15 @@ HRESULT DXISPACE::DXIFACE::Render()
 	}
 
 	return hr;
+}
+
+HRESULT DXISPACE::DXIFACE::SetCell(int loc_w, int loc_h, float tileLocX, float tileLocY, bool vis)
+{
+	cells[loc_w, loc_h].TileLocation.x = tileLocX;
+	cells[loc_w, loc_h].TileLocation.y = tileLocY;
+	cells[loc_w, loc_h].render = vis;
+	
+	return S_OK;
 }
 
 HRESULT DXISPACE::DXIFACE::fillTileset()
@@ -327,7 +376,7 @@ HRESULT DXISPACE::DXIFACE::fillTileset()
 		hr = m_pRenderTarget->CreateBitmapFromWicBitmap(
 			pConverter,
 			NULL,
-			&p_mBTileSet
+			&m_pBTileSet
 		);
 	}
 

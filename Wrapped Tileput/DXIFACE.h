@@ -4,12 +4,15 @@
 namespace DXISPACE {
 	enum INTMODE {};
 	enum COLOR {};
-	enum TileType {};
 	
 	struct cell
 	{
-		bool changed = false;
-		TileType*		tileval;
+		bool render = false;
+		struct	
+		{
+			float x = 0.0f;
+			float y = 0.0f;
+		}TileLocation;
 		INTMODE interp;
 		COLOR   color;
 	};
@@ -22,6 +25,7 @@ namespace DXISPACE {
 			int width;
 		} screensize, tilesize;
 		PCWSTR tilesetFilename;
+		D2D1_COLOR_F backgrdColor;
 	};
 
 	class DXIFACE
@@ -32,8 +36,9 @@ namespace DXISPACE {
 
 		HRESULT Initialize(HINSTANCE hInstance, LRESULT inputFunc(HWND, UINT, WPARAM, LPARAM), wchar_t* windowName);
 		HRESULT Render();
-		HRESULT SetCells(int loc_w, int loc_h, __in TileType* value);
-		void    GetCells(int loc_w, int loc_h, __out TileType* retVal);
+		HRESULT SetCell(int loc_w, int loc_h, __in float tileLocX, float tileLocY, bool vis = true);
+		void    GetCell(int loc_w, int loc_h, __out float* retVal);
+		HRESULT ChangeBkgrdColor(D2D1_COLOR_F color);
 
 		void	RunMessageLoop();
 	private:
@@ -54,14 +59,15 @@ namespace DXISPACE {
 	private:
 		HWND m_hWnd;
 		PCWSTR tsFileName;
+		D2D1_COLOR_F m_bkgrdColor;
 		ID2D1Factory* m_pDirect2dFactory;
 		ID2D1HwndRenderTarget* m_pRenderTarget;
-		cell* cellBuffer;
+		cell* cells;
 		int screensize[2];
 		int tilesize[2];
 		std::mutex cellAccess;
 		LRESULT(*unhandleFunc)(HWND, UINT, WPARAM, LPARAM);
-		ID2D1Bitmap* p_mBTileSet;
+		ID2D1Bitmap* m_pBTileSet;
 
 		// load bitmap from file WIC: https://msdn.microsoft.com/en-us/library/windows/desktop/dd756686(v=vs.85).aspx
 		// draw text using DWrite: https://msdn.microsoft.com/en-us/library/windows/desktop/dd756692(v=vs.85).aspx
