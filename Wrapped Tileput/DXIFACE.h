@@ -37,6 +37,8 @@ namespace DXISPACE {
 		HRESULT Initialize(HINSTANCE hInstance, LRESULT inputFunc(HWND, UINT, WPARAM, LPARAM), wchar_t* windowName);
 		HRESULT Render();
 		HRESULT SetCell(int loc_w, int loc_h, __in float tileLocX, float tileLocY, bool vis = true);
+		void	ResetCells(int start_loc_w = 0, int start_loc_h = 0, int end_loc_w = 0, int end_loc_h = 0);
+		HRESULT SetTileset(PCWSTR uri, int tile_w = 0, int tile_h = 0);
 		void    GetCell(int loc_w, int loc_h, __out float* retVal);
 		HRESULT ChangeBkgrdColor(D2D1_COLOR_F color);
 
@@ -65,6 +67,7 @@ namespace DXISPACE {
 		cell** cells;
 		int screensize[2];
 		int tilesize[2];
+		bool tilesetChanged = false;
 		std::mutex cellAccess;
 		LRESULT(*unhandleFunc)(HWND, UINT, WPARAM, LPARAM);
 		ID2D1Bitmap* m_pBTileSet;

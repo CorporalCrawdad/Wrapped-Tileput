@@ -2,7 +2,7 @@
 #include "classes.h"
 
 #define SCRN_SZ_W 11
-#define SCRN_SZ_H 10
+#define SCRN_SZ_H 11
 #define TILE_SZ_W 16
 #define TILE_SZ_H 16
 
@@ -24,9 +24,9 @@ int CALLBACK WinMain(
 		ZeroMemory(&info, sizeof(info));
 		info.screensize.width = SCRN_SZ_W;
 		info.screensize.height = SCRN_SZ_H;
-		info.tilesize.width = TILE_SZ_W;
-		info.tilesize.height = TILE_SZ_H;
-		info.tilesetFilename = L"HELO.bmp";
+		info.tilesize.width = 32;
+		info.tilesize.height = 32;
+		info.tilesetFilename = L"HelloWorld.bmp";
 		info.backgrdColor = D2D1::ColorF(D2D1::ColorF::Black);
 
 		directX = new DXISPACE::DXIFACE(&info);
@@ -35,6 +35,8 @@ int CALLBACK WinMain(
 	// Initialize modules
 	CoInitialize(NULL);
 	hr = directX->Initialize(hInstance, inputHandle, L"First Window");
+	if (SUCCEEDED(hr))
+		hr = directX->SetTileset(L"HELO.bmp", 16,16);
 
 	// Create thread to push cell information
 	CreateThread(
@@ -85,5 +87,12 @@ DWORD WINAPI LogicThread(LPVOID lp)
 	dxiface->SetCell(8, 5, HELO_R);
 	dxiface->SetCell(9, 5, HELO_L);
 	dxiface->SetCell(10, 5, HELO_D);
+
+	Sleep(2500);
+
+	dxiface->ResetCells();
+	dxiface->SetTileset(L"HelloWorld.bmp", 32, 32);
+	dxiface->SetCell(6, 6, 0.0f, 0.0f);
+
 	return S_OK;
 }

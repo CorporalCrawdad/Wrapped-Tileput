@@ -65,7 +65,7 @@ HRESULT DXIFACE::Initialize(HINSTANCE hInstance, LRESULT inputFunc(HWND,UINT,WPA
 		m_hWnd = CreateWindow(
 			L"WrappedDXIput",
 			windowName,
-			WS_OVERLAPPEDWINDOW,
+			WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX,
 			CW_USEDEFAULT,
 			CW_USEDEFAULT,
 //			static_cast<UINT>(ceil(640.f * dpiX / 96.f)),
@@ -120,6 +120,8 @@ HRESULT DXISPACE::DXIFACE::CreateDeviceResources()
 {
 	HRESULT hr = S_OK;
 
+	//if (tilesetChanged) DiscardDeviceResources();
+
 	if (!m_pRenderTarget)
 	{
 		RECT rc;
@@ -136,10 +138,11 @@ HRESULT DXISPACE::DXIFACE::CreateDeviceResources()
 			D2D1::HwndRenderTargetProperties(m_hWnd, size),
 			&m_pRenderTarget);
 
-		if(SUCCEEDED(hr))
-			hr = fillTileset();
 	}
 
+	if (SUCCEEDED(hr) && tilesetChanged)
+		hr = fillTileset();
+	
 	return hr;
 }
 
@@ -388,5 +391,34 @@ HRESULT DXISPACE::DXIFACE::fillTileset()
 	SafeRelease(&pScaler);
 	SafeRelease(&pIWICFactory);
 
+	if (SUCCEEDED(hr)) tilesetChanged = false;
 	return hr;
+}
+
+HRESULT DXISPACE::DXIFACE::SetTileset(PCWSTR uri, int tile_w, int tile_h)
+{
+	if (tile_w != 0)
+		tilesize[0] = tile_w;
+	if (tile_h != 0)
+		tilesize[1] = tile_h;
+
+	tsFileName = uri;
+	tilesetChanged = true;
+	return S_OK;
+}
+
+void DXISPACE::DXIFACE::ResetCells(int start_loc_w, int start_loc_h, int end_loc_w, int end_loc_h)
+{
+	if (end_loc_w == 0)
+		end_loc_w = screensize[0];
+	if (end_loc_h == 0)
+		end_loc_h = screensize[1];
+
+	for (int iw = start_loc_w; iw < end_loc_w; iw++)
+		for (int ih = start_loc_h; ih < end_loc_h; ih++)
+		{
+			cells[iw][ih].TileLocation.x = 0.0f;
+			cells[iw][ih].TileLocation.y = 0.0f;
+			cells[iw][ih].render = false;
+		}
 }
